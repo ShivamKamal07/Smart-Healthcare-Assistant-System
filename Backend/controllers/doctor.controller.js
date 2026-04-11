@@ -1,6 +1,6 @@
 
 
-const Appointment = require("../models/appointment.model");
+const Appointment = require("../models/appointment");
 
 // Create doctor profile
 exports.createDoctorProfile = async (req, res) => {
@@ -27,6 +27,10 @@ exports.createDoctorProfile = async (req, res) => {
 
 // 👉 Next Patient
 exports.nextPatient = async (req, res) => {
+ 
+if (req.user?.role !== "doctor") {
+  return res.status(403).json({ message: "Only doctor allowed" });
+}
   try {
     const { doctorId } = req.params;
 
@@ -51,6 +55,56 @@ exports.nextPatient = async (req, res) => {
       message: "Next patient called",
       currentToken: next.token,
     });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// Search doctors with filters
+exports.searchDoctors = async (req, res) => {
+  try {
+    const { specialization, maxFee, location } = req.query;
+
+    let filter = {};
+
+    // Filter by specialization
+    if (specialization) {
+      filter.specialization = specialization;
+    }
+
+    // Filter by fee
+    if (maxFee) {
+      filter.fee = { $lte: Number(maxFee) };
+    }
+
+    // Filter by location
+    if (location) {
+      filter.location = location;
+    }
+
+    const doctors = await Doctor.find(filter).populate("userId", "name");
+
+    res.json({
+      count: doctors.length,
+      doctors
+    });
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
+exports.getDoctorAppointments = async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+
+    const appointments = await Appointment.find({ doctorId })
+      .sort({ tokenNumber: 1 })
+      .populate("patientId", "name");
+
+    res.json(appointments);
 
   } catch (err) {
     res.status(500).json({ error: err.message });

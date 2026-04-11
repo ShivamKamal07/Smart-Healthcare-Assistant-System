@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const { nextPatient , createDoctorProfile} = require("../controllers/doctor.controller");
+const authMiddleware = require("../middleware/auth.middleware");
+const { nextPatient , createDoctorProfile, searchDoctors ,getDoctorAppointments } = require("../controllers/doctor.controller");
 
 //  Create doctor profile
 router.post("/create", createDoctorProfile);
@@ -11,8 +12,17 @@ router.get("/", async (req, res) => {
   res.json(doctors);
 });
 
+// Protect route
+router.put("/next/:doctorId", authMiddleware, nextPatient);
 // Next patient
 router.put("/next/:doctorId", nextPatient);
+
+
+// Search doctors
+router.get("/search", searchDoctors);
+
+// DoctorAppointments
+router.get("/appointments/:doctorId", getDoctorAppointments);
 
 
 
