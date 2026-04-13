@@ -18,3 +18,32 @@ exports.bookAppointment = async (req, res) => {
 
   res.json(appointment);
 };
+
+
+exports.nextPatient = async (req, res) => {
+  try {
+    const { doctorId } = req.body;
+
+    // current ko complete karo
+    await Appointment.findOneAndUpdate(
+      { doctorId, status: "serving" },
+      { status: "completed" }
+    );
+
+    // next patient ko serving bana do
+    const next = await Appointment.findOneAndUpdate(
+      { doctorId, status: "waiting" },
+      { status: "serving" },
+      { sort: { tokenNumber: 1 }, new: true }
+    );
+
+    res.json({
+      message: "Next patient called",
+      next
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: "Error in next patient" });
+  }
+};
