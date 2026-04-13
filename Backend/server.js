@@ -24,3 +24,14 @@ mongoose.connect(process.env.MONGO_URI)
 server.listen(5000, () => {
   console.log("Server running on port 5000");
 });
+
+
+// cors
+const cors = require("cors");
+
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}));
+
+app.use(express.json());
